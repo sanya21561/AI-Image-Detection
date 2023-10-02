@@ -44,6 +44,7 @@ model = LogisticRegressionModel(input_dim)
 criterion = nn.BCELoss()
 optimizer = optim.SGD(model.parameters(), lr=0.01)
 
+# Train the model
 num_epochs = 10
 for epoch in range(num_epochs):
     for inputs, labels in train_loader:
@@ -54,22 +55,21 @@ for epoch in range(num_epochs):
         optimizer.step()
 
 
-model.eval()
-with torch.no_grad():
-    correct = 0
-    total = 0
-    for inputs, labels in val_loader:
-        outputs = model(inputs)
-        predicted = (outputs >= 0.5).float()
-        total += labels.size(0)
-        correct += (predicted == labels.float().view(-1, 1)).sum().item()
+    model.eval()
+    with torch.no_grad():
+        correct = 0
+        total = 0
+        for inputs, labels in val_loader:
+            outputs = model(inputs)
+            predicted = (outputs >= 0.5).float()
+            total += labels.size(0)
+            correct += (predicted == labels.float().view(-1, 1)).sum().item()
 
-accuracy = 100 * correct / total
-print(f'Validation Accuracy (PyTorch): {accuracy:.2f}%')
+    accuracy = 100 * correct / total
+    print(f'Epoch [{epoch+1}/{num_epochs}] Validation Accuracy: {accuracy:.2f}%')
 
 
 #Numpy mein karke scikit learn se
-
 def flatten_tensor(tensor):
     return tensor.view(tensor.size(0), -1).numpy()
 
@@ -79,9 +79,11 @@ y_train = np.hstack([labels.numpy() for _, labels in train_loader])
 X_val = np.vstack([flatten_tensor(inputs) for inputs, _ in val_loader])
 y_val = np.hstack([labels.numpy() for _, labels in val_loader])
 
-sklearn_lr = LogisticRegression()
+# Train logistic regression using scikit-learn
+sklearn_lr = LogisticRegression(solver='lbfgs', max_iter=1000, C=0.1)
 sklearn_lr.fit(X_train, y_train)
 
+# Predict using scikit-learn model
 y_pred = sklearn_lr.predict(X_val)
 accuracy_sklearn = accuracy_score(y_val, y_pred) * 100
 print(f'Validation Accuracy (scikit-learn): {accuracy_sklearn:.2f}%')
